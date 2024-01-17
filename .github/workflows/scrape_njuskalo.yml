@@ -1,24 +1,21 @@
-name: Daily scrape Njuskalo's car
+name: Daily scrape Njuskalo's cars
 
 on:
   schedule:
     - cron: '0 22 * * *'
 
 jobs:
-  run_daily_job:
+  build:
     runs-on: ubuntu-latest
-
-    env:
-      SECRET_KEY: ${{ secrets.AUTHORIZATION_KEY }}
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v2
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
-          python-version: 3.10.12
+          python-version: 3.9
 
       - name: Install Dependencies
         run: |
@@ -26,6 +23,6 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run Daily Job
-        run: python njuskalo_scraper.py
         env:
           SECRET_KEY: ${{ secrets.AUTHORIZATION_KEY }}
+        run: python njuskalo_scraper.py
