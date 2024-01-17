@@ -1,9 +1,9 @@
 # coding=utf-8
 
-from sqlalchemy import Column, String, Integer
+from sqlalchemy import Column, Integer, String
+from sqlalchemy.orm import relationship
 
 from sqlalchemy_database.common.base import Base, session_factory
-from sqlalchemy.orm import relationship
 
 
 class CarBrand(Base):

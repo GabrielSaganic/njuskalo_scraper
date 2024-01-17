@@ -1,5 +1,19 @@
-import requests
+import logging
+import os
 from urllib.parse import urljoin
+
+import requests
+
+
+def try_except_decorator(original_function):
+    def wrapped_function(*args, **kwargs):
+        try:
+            result = original_function(*args, **kwargs)
+            return result
+        except Exception as e:
+            logging.error(f"An exception occurred in {original_function.__name__}: {e}")
+
+    return wrapped_function
 
 
 def get_headers(url):
@@ -10,7 +24,7 @@ def get_headers(url):
         "Accept-Language": "en-US,en;q=0.5",
         "Accept-Encoding": "gzip, deflate, br",
         "Content-Type": "application/vnd.api+json",
-        "Authorization": "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiJuanVza2Fsb19qc19hcHAiLCJqdGkiOiIyYjhmZGU0Yzk5ZjFjNTRkNGM1NWExNDA0ZGUzODUxYTI5MWMyYTU3N2I2YmZmMTJjOTJhMjM5MGYwOTM0NTcyZGE2MjUzZTY5YTQ5MzYzZSIsImlhdCI6MTcwNTM0NzIwMS43ODkyMTQsIm5iZiI6MTcwNTM0NzIwMS43ODkyMTUsImV4cCI6MTcwNTM2ODgwMS43ODU2MzMsInN1YiI6IiIsInNjb3BlcyI6W119.UaEQyo9Nn0pTXONY2lBE_eJGEolJ0TReBZ7LS3PJXqseGIesciPIoOjasTRSWQQfQRDcZEOfSk7t3r_CpiR671ajDbL9EzZCaPVqRsWb1rrP-6_dY4PNa86_e_qhU2xUascHHi3pbUwnS9FRpdF6r1NC6A5LAsBRtjDtj1aIuGR7zZ75j_x-47nXrIo0SKPccp1cSCIAdJA8lRRjuSJEdAgjmXzWcgQHErqMnSRxewA4jKBa54PbHUyW92tkNmkfiMSw18jopdXnX81fS5rFZqVCRj-wWoNH6fZQJuSFxsDC4_DD1CLbxGFZsQRap3FU5IesWP0BWww7qIAIytFd1Q",
+        "Authorization": os.environ.get("AUTHORIZATION_KEY", ""),
         "Connection": "keep-alive",
         "Referer": url,
         "Sec-Fetch-Dest": "empty",
@@ -20,19 +34,26 @@ def get_headers(url):
     }
 
 
+@try_except_decorator
 def get_car_link(article) -> str:
     h3_tag_title = article.find("h3", attrs={"class": "entity-title"})
     if h3_tag_title:
         a_tag = h3_tag_title.find("a", attrs={"class": "link"})
         link = a_tag.get("href")
-        return urljoin("https://www.njuskalo.hr", link)
+        link = urljoin("https://www.njuskalo.hr", link)
+        if "https://www.njuskalo.hr/auti/" in link:
+            return link
     return ""
 
 
+@try_except_decorator
 def make_request(url):
-    return requests.get(url=url, headers=get_headers(url))
+    response = requests.get(url=url, headers=get_headers(url))
+    response.raise_for_status()
+    return response
 
 
+@try_except_decorator
 def read_from_file(file):
     with open(file, "r") as file:
         content = file.read()
@@ -67,6 +88,8 @@ FIELD_MAPPING = {
     "Potrošnja goriva": "fuel_consumption",
 }
 
+
+@try_except_decorator
 def clear_text(text: str) -> str:
     return (
         text.replace(". godište", "")
@@ -74,15 +97,29 @@ def clear_text(text: str) -> str:
         .replace(" kW", "")
         .replace(" cm3", "")
         .replace(" l/100km", "")
+        .replace("\xa0€", "")
     )
 
 
-def get_car_company(detail) -> str:
+@try_except_decorator
+def clear_price_text(price: str) -> str:
+    return price.replace("")
+
+
+@try_except_decorator
+def get_car_detail(detail) -> str:
     tmp_dict = {}
     basic_details = detail.find_all(
         "span", attrs={"class": "ClassifiedDetailBasicDetails-textWrapContainer"}
     )
     for index, basic_detail in enumerate(basic_details):
         if basic_detail.text in EXPECTED_DETAILS:
-            tmp_dict[FIELD_MAPPING.get(basic_detail.text)] = clear_text(basic_details[index + 1].text)
+            tmp_dict[FIELD_MAPPING.get(basic_detail.text)] = clear_text(
+                basic_details[index + 1].text
+            )
+
+    price_tag = detail.find(
+        "span", attrs={"class": "ClassifiedDetailCreditCalculator-totalAmountPriceBit"}
+    )
+    tmp_dict["price"] = clear_text(price_tag.text)
     return tmp_dict

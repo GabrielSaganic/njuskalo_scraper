@@ -1,9 +1,9 @@
 # coding=utf-8
 
-from sqlalchemy import Column, String, Integer, Float, ForeignKey
+from sqlalchemy import Column, Float, ForeignKey, Integer, String
+from sqlalchemy.orm import relationship
 
 from sqlalchemy_database.common.base import Base, session_factory
-from sqlalchemy.orm import relationship
 
 
 class CarDetail(Base):
@@ -11,6 +11,7 @@ class CarDetail(Base):
 
     id = Column(Integer, primary_key=True)
     car_brand_id = Column(Integer, ForeignKey("car_brand.id"))
+    price = Column(Integer)
     location = Column(String, nullable=True)
     car_model = Column(String)
     type_of_car = Column(String, nullable=True)
@@ -28,6 +29,7 @@ class CarDetail(Base):
     def __init__(
         self,
         car_brand,
+        price,
         link,
         car_model,
         year_of_manufacture,
@@ -41,6 +43,7 @@ class CarDetail(Base):
         fuel_consumption=None,
     ):
         self.car_brand = car_brand
+        self.price = price
         self.location = location
         self.car_model = car_model
         self.type_of_car = type_of_car
@@ -54,7 +57,7 @@ class CarDetail(Base):
         self.link = link
 
     @classmethod
-    def get_or_create(cls, data):
+    def get_or_create(cls, data: dict):
         session = session_factory()
 
         instance = session.query(cls).filter_by(**data).first()
@@ -68,3 +71,10 @@ class CarDetail(Base):
         instance = session.query(cls).filter_by(**data).first()
         session.close()
         return instance, True
+
+    @classmethod
+    def get_first(cls, data: dict):
+        session = session_factory()
+        instance = session.query(cls).filter_by(**data).first()
+        session.close()
+        return instance
