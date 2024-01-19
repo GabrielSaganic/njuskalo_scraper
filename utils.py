@@ -5,15 +5,18 @@ from urllib.parse import urljoin
 import requests
 
 
-def try_except_decorator(original_function):
-    def wrapped_function(*args, **kwargs):
-        try:
-            result = original_function(*args, **kwargs)
-            return result
-        except Exception as e:
-            logging.error(f"An exception occurred in {original_function.__name__}: {e}")
+def try_except_decorator(default_value):
+    def decorator(original_function):
+        def wrapped_function(*args, **kwargs):
+            try:
+                result = original_function(*args, **kwargs)
+                return result
+            except Exception as e:
+                logging.error(f"An exception occurred in {original_function.__name__}: {e}")
+                return default_value
 
-    return wrapped_function
+        return wrapped_function
+    return decorator
 
 
 def get_headers(url):
@@ -34,7 +37,7 @@ def get_headers(url):
     }
 
 
-@try_except_decorator
+@try_except_decorator("")
 def get_car_link(article) -> str:
     h3_tag_title = article.find("h3", attrs={"class": "entity-title"})
     if h3_tag_title:
@@ -46,14 +49,14 @@ def get_car_link(article) -> str:
     return ""
 
 
-@try_except_decorator
+@try_except_decorator(None)
 def make_request(url):
     response = requests.get(url=url, headers=get_headers(url))
     response.raise_for_status()
     return response
 
 
-@try_except_decorator
+@try_except_decorator("")
 def read_from_file(file):
     with open(file, "r") as file:
         content = file.read()
@@ -89,7 +92,7 @@ FIELD_MAPPING = {
 }
 
 
-@try_except_decorator
+@try_except_decorator("")
 def clear_text(text: str) -> str:
     return (
         text.replace(". godište", "")
@@ -100,28 +103,20 @@ def clear_text(text: str) -> str:
         .replace("\xa0€", "")
     )
 
-
-@try_except_decorator
-def clear_price_text(price: str) -> str:
-    return price.replace("")
-
-
+@try_except_decorator({})
 def get_car_detail(detail) -> str:
-    try:
-        tmp_dict = {}
-        basic_details = detail.find_all(
-            "span", attrs={"class": "ClassifiedDetailBasicDetails-textWrapContainer"}
-        )
-        for index, basic_detail in enumerate(basic_details):
-            if basic_detail.text in EXPECTED_DETAILS:
-                tmp_dict[FIELD_MAPPING.get(basic_detail.text)] = clear_text(
-                    basic_details[index + 1].text
-                )
+    tmp_dict = {}
+    basic_details = detail.find_all(
+        "span", attrs={"class": "ClassifiedDetailBasicDetails-textWrapContainer"}
+    )
+    for index, basic_detail in enumerate(basic_details):
+        if basic_detail.text in EXPECTED_DETAILS:
+            tmp_dict[FIELD_MAPPING.get(basic_detail.text)] = clear_text(
+                basic_details[index + 1].text
+            )
 
-        price_tag = detail.find(
-            "span", attrs={"class": "ClassifiedDetailCreditCalculator-totalAmountPriceBit"}
-        )
-        tmp_dict["price"] = clear_text(price_tag.text)
-        return tmp_dict
-    except:
-        return {}
+    price_tag = detail.find(
+        "span", attrs={"class": "ClassifiedDetailCreditCalculator-totalAmountPriceBit"}
+    )
+    tmp_dict["price"] = clear_text(price_tag.text)
+    return tmp_dict
