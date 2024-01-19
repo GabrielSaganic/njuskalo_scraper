@@ -106,20 +106,22 @@ def clear_price_text(price: str) -> str:
     return price.replace("")
 
 
-@try_except_decorator
 def get_car_detail(detail) -> str:
-    tmp_dict = {}
-    basic_details = detail.find_all(
-        "span", attrs={"class": "ClassifiedDetailBasicDetails-textWrapContainer"}
-    )
-    for index, basic_detail in enumerate(basic_details):
-        if basic_detail.text in EXPECTED_DETAILS:
-            tmp_dict[FIELD_MAPPING.get(basic_detail.text)] = clear_text(
-                basic_details[index + 1].text
-            )
+    try:
+        tmp_dict = {}
+        basic_details = detail.find_all(
+            "span", attrs={"class": "ClassifiedDetailBasicDetails-textWrapContainer"}
+        )
+        for index, basic_detail in enumerate(basic_details):
+            if basic_detail.text in EXPECTED_DETAILS:
+                tmp_dict[FIELD_MAPPING.get(basic_detail.text)] = clear_text(
+                    basic_details[index + 1].text
+                )
 
-    price_tag = detail.find(
-        "span", attrs={"class": "ClassifiedDetailCreditCalculator-totalAmountPriceBit"}
-    )
-    tmp_dict["price"] = clear_text(price_tag.text)
-    return tmp_dict
+        price_tag = detail.find(
+            "span", attrs={"class": "ClassifiedDetailCreditCalculator-totalAmountPriceBit"}
+        )
+        tmp_dict["price"] = clear_text(price_tag.text)
+        return tmp_dict
+    except:
+        return {}

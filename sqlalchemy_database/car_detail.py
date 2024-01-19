@@ -1,6 +1,6 @@
 # coding=utf-8
 
-from sqlalchemy import Column, Float, ForeignKey, Integer, String
+from sqlalchemy import Boolean, Column, Float, ForeignKey, Integer, String, DateTime, func
 from sqlalchemy.orm import relationship
 
 from sqlalchemy_database.common.base import Base, session_factory
@@ -23,6 +23,9 @@ class CarDetail(Base):
     work_volume = Column(Float, nullable=True)
     fuel_consumption = Column(Float, nullable=True)
     link = Column(String)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    fuel_consumption = Column(Float, nullable=True)
+    active = Column(Boolean, default=True)
 
     car_brand = relationship("CarBrand", back_populates="car_details")
 
@@ -78,3 +81,27 @@ class CarDetail(Base):
         instance = session.query(cls).filter_by(**data).first()
         session.close()
         return instance
+    
+    @classmethod
+    def deactivate_cars(cls, list_of_active_link, min_price, max_price, max_distance):
+        session = session_factory()
+
+        a = session.query(cls).filter(
+            ~cls.link.in_(list_of_active_link),
+            cls.price.between(min_price - 1, max_price + 1),
+            cls.kilometers < max_distance
+        ).update({"active": False}, synchronize_session=False)
+
+        session.commit()
+        session.close()
+
+    @classmethod
+    def activate_cars(cls, list_of_active_link):
+        session = session_factory()
+
+        a = session.query(cls).filter(
+            cls.link.in_(list_of_active_link),
+        ).update({"active": True}, synchronize_session=False)
+
+        session.commit()
+        session.close()

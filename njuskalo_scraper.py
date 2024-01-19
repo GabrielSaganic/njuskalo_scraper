@@ -11,6 +11,7 @@ MIN_PRICE = 3000
 MAX_PRICE = 3200
 MAX_DISTANCE = 150000
 
+list_of_active_link = []
 
 def get_njuskalo_page(url: str, safe_next_page: int, debug: bool = False):
     next_page = False
@@ -35,10 +36,18 @@ def get_njuskalo_page(url: str, safe_next_page: int, debug: bool = False):
             next_page = True
         else:
             continue
-
+        
+        if link == "https://www.njuskalo.hr/auti/renault-twingo-1.2-2009-god-150000-km-servo-kartice-oglas-42072374" or link == "https://www.njuskalo.hr/auti/peugeot-308-1.4-16v-vti-oglas-42464154":
+            pass
+        else:
+            list_of_active_link.append(link)
+            pass
+        # list_of_active_link.append(link)
+        
         if CarDetail.get_first({"link": link}):
             logging.info(f"Skipping car detail as link already exist in DB: {link}")
             continue
+
 
         if debug:
             response = read_from_file("car_detail_example_html.txt")
@@ -69,6 +78,9 @@ def get_njuskalo_page(url: str, safe_next_page: int, debug: bool = False):
 def set_up_page_url(page):
     return f"https://www.njuskalo.hr/auti?price%5Bmin%5D={MIN_PRICE}&price%5Bmax%5D={MAX_PRICE}&mileage%5Bmax%5D={MAX_DISTANCE}&page={page}"
 
+def update_non_active_record():
+    CarDetail.deactivate_cars(list_of_active_link, MIN_PRICE, MAX_PRICE, MAX_DISTANCE)
+    CarDetail.activate_cars(list_of_active_link)
 
 def main():
     logging.info(f"Starting scraper! Good luck!")
@@ -90,6 +102,7 @@ def main():
         logging.info(f"Successfully get page: {page}")
         page = page + 1
 
+    update_non_active_record()
 
 if __name__ == "__main__":
     logging.basicConfig(
