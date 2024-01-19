@@ -8,12 +8,12 @@ from sqlalchemy_database.car_detail import CarDetail
 from utils import get_car_detail, get_car_link, make_request, read_from_file
 
 MIN_PRICE = 3000
-MAX_PRICE = 3200
+MAX_PRICE = 9000
 MAX_DISTANCE = 150000
 
 list_of_active_link = []
 
-def get_njuskalo_page(url: str, safe_next_page: int, debug: bool = False):
+def get_njuskalo_page(url: str, debug: bool = False):
     next_page = False
     if debug:
         response = read_from_file("car_list_example_html.txt")
@@ -69,16 +69,15 @@ def get_njuskalo_page(url: str, safe_next_page: int, debug: bool = False):
 
         tmp_data["car_brand"] = car_brand
         CarDetail.get_or_create(tmp_data)
-        safe_next_page = 5
         logging.info(f"Successfully get car: {tmp_data['car_model']}")
 
-    return next_page, safe_next_page - 1
+    return next_page
 
 
 def set_up_page_url(page):
     return f"https://www.njuskalo.hr/auti?price%5Bmin%5D={MIN_PRICE}&price%5Bmax%5D={MAX_PRICE}&mileage%5Bmax%5D={MAX_DISTANCE}&page={page}"
 
-def update_non_active_record():
+def update_active_field():
     CarDetail.deactivate_cars(list_of_active_link, MIN_PRICE, MAX_PRICE, MAX_DISTANCE)
     CarDetail.activate_cars(list_of_active_link)
 
@@ -94,15 +93,14 @@ def main():
 
     page = 1
     next_page = True
-    safe_next_page = 5
-    while next_page and safe_next_page > 0:
-        next_page, safe_next_page = get_njuskalo_page(
-            set_up_page_url(page), safe_next_page, debug
+    while next_page:
+        next_page = get_njuskalo_page(
+            set_up_page_url(page), debug
         )
         logging.info(f"Successfully get page: {page}")
         page = page + 1
 
-    update_non_active_record()
+    update_active_field()
 
 if __name__ == "__main__":
     logging.basicConfig(

@@ -1,6 +1,7 @@
 # coding=utf-8
 
-from sqlalchemy import Boolean, Column, Float, ForeignKey, Integer, String, DateTime, func
+from sqlalchemy import Boolean, Column, Float, ForeignKey, Integer, String, DateTime
+from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 
 from sqlalchemy_database.common.base import Base, session_factory
@@ -12,18 +13,18 @@ class CarDetail(Base):
     id = Column(Integer, primary_key=True)
     car_brand_id = Column(Integer, ForeignKey("car_brand.id"))
     price = Column(Integer)
-    location = Column(String, nullable=True)
-    car_model = Column(String)
-    type_of_car = Column(String, nullable=True)
+    location = Column(String(length=255), nullable=True)
+    car_model = Column(String(length=255))
+    type_of_car = Column(String(length=255), nullable=True)
     year_of_manufacture = Column(Integer)
-    registered_until = Column(String, nullable=True)
+    registered_until = Column(String(length=255), nullable=True)
     kilometers = Column(Integer)
-    engine = Column(String, nullable=True)
+    engine = Column(String(length=255), nullable=True)
     engine_power = Column(Integer, nullable=True)
     work_volume = Column(Float, nullable=True)
     fuel_consumption = Column(Float, nullable=True)
-    link = Column(String)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    link = Column(String(length=255))
+    created_at = Column(DateTime(timezone=True), default=func.now())
     fuel_consumption = Column(Float, nullable=True)
     active = Column(Boolean, default=True)
 
@@ -86,10 +87,8 @@ class CarDetail(Base):
     def deactivate_cars(cls, list_of_active_link, min_price, max_price, max_distance):
         session = session_factory()
 
-        a = session.query(cls).filter(
+        session.query(cls).filter(
             ~cls.link.in_(list_of_active_link),
-            cls.price.between(min_price - 1, max_price + 1),
-            cls.kilometers < max_distance
         ).update({"active": False}, synchronize_session=False)
 
         session.commit()
@@ -99,7 +98,7 @@ class CarDetail(Base):
     def activate_cars(cls, list_of_active_link):
         session = session_factory()
 
-        a = session.query(cls).filter(
+        session.query(cls).filter(
             cls.link.in_(list_of_active_link),
         ).update({"active": True}, synchronize_session=False)
 

@@ -10,7 +10,7 @@ class CarBrand(Base):
     __tablename__ = "car_brand"
 
     id = Column(Integer, primary_key=True)
-    name = Column(String)
+    name = Column(String(length=255))
 
     car_details = relationship("CarDetail", back_populates="car_brand")
 
