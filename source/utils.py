@@ -1,4 +1,5 @@
 import logging
+import secrets
 import os
 from urllib.parse import urljoin
 
@@ -12,10 +13,13 @@ def try_except_decorator(default_value):
                 result = original_function(*args, **kwargs)
                 return result
             except Exception as e:
-                logging.error(f"An exception occurred in {original_function.__name__}: {e}")
+                logging.error(
+                    f"An exception occurred in {original_function.__name__}: {e}"
+                )
                 return default_value
 
         return wrapped_function
+
     return decorator
 
 
@@ -27,7 +31,7 @@ def get_headers(url):
         "Accept-Language": "en-US,en;q=0.5",
         "Accept-Encoding": "gzip, deflate, br",
         "Content-Type": "application/vnd.api+json",
-        "Authorization": os.environ.get("AUTHORIZATION_KEY", ""),
+        "Authorization": generate_bearer_token(),
         "Connection": "keep-alive",
         "Referer": url,
         "Sec-Fetch-Dest": "empty",
@@ -103,6 +107,7 @@ def clear_text(text: str) -> str:
         .replace("\xa0€", "")
     )
 
+
 @try_except_decorator({})
 def get_car_detail(detail) -> str:
     tmp_dict = {}
@@ -120,3 +125,39 @@ def get_car_detail(detail) -> str:
     )
     tmp_dict["price"] = clear_text(price_tag.text)
     return tmp_dict
+
+
+@try_except_decorator("")
+def generate_email_html(car_data):
+    with open("source/email_template/daily_summarize.html", "r") as file:
+        html = file.read()
+
+    table_rows = ""
+    for car in car_data:
+        table_rows += f"""
+            <tr>
+                <td>{car['car_model']}</td>
+                <td>{car['price']}</td>
+                <td>{car['year_of_manufacture']}</td>
+                <td>{car['kilometers']}</td>
+                <td><a href="{car['link']}">View Details</a></td>
+            </tr>
+        """
+    return html.replace("[TABLE_ROWS]", table_rows)
+
+
+@try_except_decorator("")
+def generate_email_text(car_data):
+    text = """
+        Hi there,
+
+        We hope this message finds you well.
+
+        As part of our commitment to keeping you informed about the latest and greatest in the automotive world, we're thrilled to present your personalized list of the top 5 best available cars for today! 
+        """
+    return f"{text}\n{car_data}"
+
+@try_except_decorator("")
+def generate_bearer_token():
+    bearer_token = secrets.token_urlsafe(656)
+    return f"Bearer {bearer_token}"

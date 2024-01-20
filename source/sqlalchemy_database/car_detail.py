@@ -1,9 +1,8 @@
 # coding=utf-8
 
-from sqlalchemy import Boolean, Column, Float, ForeignKey, Integer, String, DateTime
-from sqlalchemy.sql import func
+from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
-
+from sqlalchemy.sql import func
 from sqlalchemy_database.common.base import Base, session_factory
 
 
@@ -82,7 +81,7 @@ class CarDetail(Base):
         instance = session.query(cls).filter_by(**data).first()
         session.close()
         return instance
-    
+
     @classmethod
     def deactivate_cars(cls, list_of_active_link, min_price, max_price, max_distance):
         session = session_factory()

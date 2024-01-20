@@ -1,7 +1,6 @@
 import logging
 
 from bs4 import BeautifulSoup
-
 from sqlalchemy_database.car_brand import CarBrand
 from sqlalchemy_database.car_detail import CarDetail
 from utils import get_car_detail, get_car_link, make_request
@@ -16,7 +15,8 @@ MAX_DISTANCE = 150000
 
 list_of_active_link = []
 
-class ScraperClass():
+
+class ScraperClass:
     def __init__(self, min_price, max_price, max_distance):
         self.min_price = min_price
         self.max_price = max_price
@@ -50,9 +50,9 @@ class ScraperClass():
                 self.next_page = True
             else:
                 continue
-            
+
             self.list_of_active_link.append(link)
-            
+
             if CarDetail.get_first({"link": link}):
                 logging.info(f"Skipping car detail as link already exist in DB: {link}")
                 continue
@@ -76,14 +76,17 @@ class ScraperClass():
         return f"https://www.njuskalo.hr/auti?price%5Bmin%5D={self.min_price}&price%5Bmax%5D={self.max_price}&mileage%5Bmax%5D={self.max_distance}&page={page}"
 
     def update_active_field(self):
-        CarDetail.deactivate_cars(self.list_of_active_link, self.min_price, self.max_price, self.max_distance)
+        CarDetail.deactivate_cars(
+            self.list_of_active_link, self.min_price, self.max_price, self.max_distance
+        )
         CarDetail.activate_cars(self.list_of_active_link)
 
 
 def main():
-    logging.info(f"Starting scraper! Good luck!")  
+    logging.info(f"Starting scraper! Good luck!")
     scraper_api = ScraperClass(MIN_PRICE, MAX_PRICE, MAX_DISTANCE)
     scraper_api.start_scraping()
+
 
 if __name__ == "__main__":
     main()

@@ -10,8 +10,8 @@ if [ -f "$ENV_FILE" ]; then
     done < "$ENV_FILE"
 
     # Run your Python script or any other commands that need the environment variables
-    # python njuskalo_scraper.py
-    python summarize_cars.py
+    python source/njuskalo_scraper.py
+    python source/summarize_cars.py
 else
     echo "Error: $ENV_FILE not found."
 fi

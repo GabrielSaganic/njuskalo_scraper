@@ -2,7 +2,7 @@ name: Daily scrape Njuskalo's cars
 
 on:
   schedule:
-    - cron: '0 9 * * *'
+    - cron: '0 21 * * *'
 
 jobs:
   build:
@@ -22,11 +22,22 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run Daily Job
+      - name: Run Daily Scraping Job
         env:
           AUTHORIZATION_KEY: ${{ secrets.AUTHORIZATION_KEY }}
           DB_HOST: ${{ secrets.DB_HOST }}
           DB_NAME: ${{ secrets.DB_NAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
-        run: python njuskalo_scraper.py
+        run: python source/njuskalo_scraper.py
+
+      - name: Run Sending Email Job
+        env:
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
+          SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+        run: python source/summarize_cars.py
