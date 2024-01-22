@@ -23,7 +23,7 @@ def try_except_decorator(default_value):
     return decorator
 
 
-def get_headers(url):
+def get_headers(url: str) -> None:
     return {
         "Host": "www.njuskalo.hr",
         "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:121.0) Gecko/20100101 Firefox/121.0",
@@ -54,14 +54,14 @@ def get_car_link(article) -> str:
 
 
 @try_except_decorator(None)
-def make_request(url):
+def make_request(url: str) -> None:
     response = requests.get(url=url, headers=get_headers(url))
     response.raise_for_status()
     return response
 
 
 @try_except_decorator("")
-def read_from_file(file):
+def read_from_file(file: str) -> None:
     with open(file, "r") as file:
         content = file.read()
     return content
@@ -109,7 +109,7 @@ def clear_text(text: str) -> str:
 
 
 @try_except_decorator({})
-def get_car_detail(detail) -> str:
+def get_car_detail(detail) -> dict:
     tmp_dict = {}
     basic_details = detail.find_all(
         "span", attrs={"class": "ClassifiedDetailBasicDetails-textWrapContainer"}
@@ -128,7 +128,7 @@ def get_car_detail(detail) -> str:
 
 
 @try_except_decorator("")
-def generate_email_html(car_data):
+def generate_email_html(car_data: dict) -> None:
     with open("source/email_template/daily_summarize.html", "r") as file:
         html = file.read()
 
@@ -147,17 +147,17 @@ def generate_email_html(car_data):
 
 
 @try_except_decorator("")
-def generate_email_text(car_data):
+def generate_email_text(car_data: dict) -> None:
     text = """
         Hi there,
 
         We hope this message finds you well.
 
-        As part of our commitment to keeping you informed about the latest and greatest in the automotive world, we're thrilled to present your personalized list of the top 5 best available cars for today! 
+        As part of our commitment to keeping you informed about the latest and greatest in the automotive world, we're thrilled to present your personalized list of the top 10 best available cars for today! 
         """
     return f"{text}\n{car_data}"
 
 @try_except_decorator("")
-def generate_bearer_token():
+def generate_bearer_token() -> str:
     bearer_token = secrets.token_urlsafe(656)
     return f"Bearer {bearer_token}"

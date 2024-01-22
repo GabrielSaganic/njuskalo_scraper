@@ -24,7 +24,7 @@ class ScraperClass:
         self.list_of_active_link = []
         self.next_page = True
 
-    def start_scraping(self):
+    def start_scraping(self) -> None:
         page = 1
         while self.next_page:
             url = self.set_up_page_url(page)
@@ -35,7 +35,7 @@ class ScraperClass:
 
         self.update_active_field()
 
-    def get_njuskalo_page(self, url: str):
+    def get_njuskalo_page(self, url: str) -> None:
         self.next_page = False
 
         response = make_request(url)
@@ -72,10 +72,10 @@ class ScraperClass:
             CarDetail.get_or_create(tmp_data)
             logging.info(f"Successfully get car: {tmp_data['car_model']}")
 
-    def set_up_page_url(self, page):
+    def set_up_page_url(self, page) -> str:
         return f"https://www.njuskalo.hr/auti?price%5Bmin%5D={self.min_price}&price%5Bmax%5D={self.max_price}&mileage%5Bmax%5D={self.max_distance}&page={page}"
 
-    def update_active_field(self):
+    def update_active_field(self) -> None:
         CarDetail.deactivate_cars(
             self.list_of_active_link, self.min_price, self.max_price, self.max_distance
         )

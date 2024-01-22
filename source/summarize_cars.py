@@ -39,7 +39,32 @@ class SummarizeCars:
         ]
         self.wanted_counties = ["Primorsko-goranska", "Istarska", "Karlovačka"]
 
-    def summarize(self):
+    def start_summarize_cars_job(self):
+        """
+        Initiates the process of summarizing top car picks and sending the summary via email.
+
+        """
+        cars_dict = self._summarize()
+        self._send_email(cars_dict)
+
+    def read_query_config(self):
+        """
+        Utilize this tool to adopt a more modular approach to summarizing information about cars.
+        This function is designed to extract relevant details such as wanted car brand, desired countries, maximum kilometers, 
+        and maximum price from a configuration file for each email recipient.
+        """
+        raise NotImplementedError()
+
+    def _summarize(self) -> dict:
+        """
+        Summarizes the top 10 car picks based on specified criteria.
+        The result is ordered by price in ascending order, and the top 10 records are
+        retrieved.
+
+        Returns:
+        - dict: A dictionary containing information about the top 10 car picks, including
+                car model, price, year of manufacture, kilometers, and a link.
+        """
         session = session_factory()
         instance = (
             session.query(
@@ -61,19 +86,31 @@ class SummarizeCars:
                 CarDetail.kilometers < 100000,
                 CarDetail.active == True,
             )
+            .order_by(CarDetail.price.asc())
+            .limit(10)
         )
         session.close()
         cars_data = read_sql(instance.statement, instance.session.bind)
-        self.send_email(cars_data.to_dict(orient="records"))
+        return cars_data.to_dict(orient="records")
 
-    def send_email(self, car_data):
+    def _send_email(self, car_data: dict) -> None:
+        """
+        Sends an email containing the top 10 picks of cars to a specified recipient.
+        The function uses the Simple Mail Transfer Protocol (SMTP) to send the email.
+
+        Parameters:
+        - car_data (dict): A dictionary containing information about the top 10 car picks.
+
+        Raises:
+        - Exception: If there is an error sending the email, an error message is logged.
+        """
         smtp_port = 587
         smtp_server = os.environ.get("SMTP_SERVER", "")
         smtp_username = os.environ.get("SMTP_USERNAME", "")
         smtp_password = os.environ.get("APP_PASSWORD", "")
 
-        sender_email = "mailtrap@example.com"
-        receiver_email = "new@example.com"
+        sender_email = "gabriel.saganic@gmail.com"
+        receiver_email = "gabriel.saganic@gmail.com"
         message = MIMEMultipart("alternative")
         message[
             "Subject"
@@ -106,7 +143,7 @@ class SummarizeCars:
 def main():
     logging.info("Starting summarizing!")
     summarize_cars = SummarizeCars()
-    summarize_cars.summarize()
+    summarize_cars.start_summarize_cars_job()
 
 
 if __name__ == "__main__":
