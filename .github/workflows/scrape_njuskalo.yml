@@ -40,4 +40,5 @@ jobs:
           APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
           SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
           SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          DB_ENCRYPTION_KEY: ${{ secrets.DB_ENCRYPTION_KEY }}
         run: python source/summarize_cars.py

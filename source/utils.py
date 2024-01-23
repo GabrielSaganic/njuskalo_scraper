@@ -1,6 +1,6 @@
 import logging
+import re
 import secrets
-import os
 from urllib.parse import urljoin
 
 import requests
@@ -157,7 +157,18 @@ def generate_email_text(car_data: dict) -> None:
         """
     return f"{text}\n{car_data}"
 
+
 @try_except_decorator("")
 def generate_bearer_token() -> str:
     bearer_token = secrets.token_urlsafe(656)
     return f"Bearer {bearer_token}"
+
+
+@try_except_decorator("")
+def mask_email(email):
+    # Example: "nik.johson@gmail.com" becomes "n****@gmail.com"
+    if isinstance(email, str):
+        pattern = r"(\S)\S+@(\S+\.\S+)"
+        masked_email = re.sub(pattern, r"\1****@\2", email)
+        return masked_email
+    return email

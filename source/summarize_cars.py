@@ -1,6 +1,7 @@
 import logging
 import os
 import smtplib
+import json
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
@@ -8,8 +9,9 @@ from pandas import read_sql
 from sqlalchemy import or_
 from sqlalchemy_database.car_brand import CarBrand
 from sqlalchemy_database.car_detail import CarDetail
+from sqlalchemy_database.user import User
 from sqlalchemy_database.common.base import session_factory
-from utils import generate_email_html, generate_email_text
+from utils import generate_email_html, generate_email_text, mask_email
 
 logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -17,35 +19,14 @@ logging.basicConfig(
 
 
 class SummarizeCars:
-    def __init__(self):
-        self.wanted_car_brand = [
-            "Toyota",
-            "Ford",
-            "VW",
-            "Fiat",
-            "Renault",
-            "Peugeot",
-            "Citroën",
-            "Hyundai",
-            "Opel",
-            "Seat",
-            "Nissan",
-            "Suzuki",
-            "Kia",
-            "Mazda",
-            "Škoda",
-            "Honda",
-            "Lada",
-        ]
-        self.wanted_counties = ["Primorsko-goranska", "Istarska", "Karlovačka"]
-
     def start_summarize_cars_job(self):
         """
         Initiates the process of summarizing top car picks and sending the summary via email.
-
         """
-        cars_dict = self._summarize()
-        self._send_email(cars_dict)
+        for user in User.get_all():
+            search_data = json.loads(user.search_config.replace("'", "\""))
+            cars_dict = self._summarize(search_data)
+            self._send_email(cars_dict, user.email)
 
     def read_query_config(self):
         """
@@ -55,7 +36,7 @@ class SummarizeCars:
         """
         raise NotImplementedError()
 
-    def _summarize(self) -> dict:
+    def _summarize(self, search_config: dict) -> dict:
         """
         Summarizes the top 10 car picks based on specified criteria.
         The result is ordered by price in ascending order, and the top 10 records are
@@ -76,15 +57,16 @@ class SummarizeCars:
             )
             .join(CarBrand)
             .filter(
-                CarBrand.name.in_(self.wanted_car_brand),
                 or_(
                     *[
                         CarDetail.location.ilike(f"%{county}%")
-                        for county in self.wanted_counties
+                        for county in search_config.get("wanted_counties", "")
                     ]
                 ),
-                CarDetail.kilometers < 100000,
+                CarDetail.kilometers < search_config.get("kilometers", 0),
                 CarDetail.active == True,
+                CarDetail.year_of_manufacture > search_config.get("year_of_manufacture", 0),
+                (CarBrand.name + " " + CarDetail.car_model).in_(search_config.get("car_model", []))
             )
             .order_by(CarDetail.price.asc())
             .limit(10)
@@ -93,7 +75,7 @@ class SummarizeCars:
         cars_data = read_sql(instance.statement, instance.session.bind)
         return cars_data.to_dict(orient="records")
 
-    def _send_email(self, car_data: dict) -> None:
+    def _send_email(self, car_data: dict, receiver_email: str, ) -> None:
         """
         Sends an email containing the top 10 picks of cars to a specified recipient.
         The function uses the Simple Mail Transfer Protocol (SMTP) to send the email.
@@ -110,7 +92,6 @@ class SummarizeCars:
         smtp_password = os.environ.get("APP_PASSWORD", "")
 
         sender_email = "gabriel.saganic@gmail.com"
-        receiver_email = "gabriel.saganic@gmail.com"
         message = MIMEMultipart("alternative")
         message[
             "Subject"
@@ -135,7 +116,7 @@ class SummarizeCars:
                 server.login(smtp_username, smtp_password)
                 server.sendmail(sender_email, receiver_email, message.as_string())
 
-            logging.info("Email sent!")
+            logging.info(f"Email sent for user {mask_email(receiver_email)}.")
         except Exception as e:
             logging.error(f"Error sending email! Detail: {e}.")
 
