@@ -8,11 +8,11 @@ DB_HOST = os.environ.get("DB_HOST", "")
 DB_NAME = os.environ.get("DB_NAME", "")
 DB_PASSWORD = os.environ.get("DB_PASSWORD", "")
 DB_USERNAME = os.environ.get("DB_USERNAME", "")
-DATABASE_URL = os.environ.get("DATABASE_URL", "")
-
+DEBUG = os.environ.get("DEBUG", False)
 DATABASE_URL = (
-    DATABASE_URL
-    or f"mysql+mysqlconnector://{DB_NAME}:{DB_PASSWORD}@{DB_HOST}:3306/{DB_NAME}"
+    os.environ.get("DATABASE_URL", "")
+    if DEBUG == "True"
+    else f"mysql+mysqlconnector://{DB_NAME}:{DB_PASSWORD}@{DB_HOST}:3306/{DB_NAME}"
 )
 
 engine = create_engine(DATABASE_URL)
