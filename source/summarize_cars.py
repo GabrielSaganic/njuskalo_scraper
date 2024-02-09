@@ -65,11 +65,8 @@ class SummarizeCars:
                 ),
                 CarDetail.kilometers < search_config.get("kilometers", 0),
                 CarDetail.active == True,
-                CarDetail.year_of_manufacture
-                > search_config.get("year_of_manufacture", 0),
-                (CarBrand.name + " " + CarDetail.car_model).in_(
-                    search_config.get("car_model", [])
-                ),
+                CarDetail.year_of_manufacture > search_config.get("year_of_manufacture", 0),
+                (CarBrand.name + " " + CarDetail.car_model).in_(search_config.get("car_model", []))
             )
             .order_by(CarDetail.price.asc())
             .limit(10)
@@ -78,11 +75,7 @@ class SummarizeCars:
         cars_data = read_sql(instance.statement, instance.session.bind)
         return cars_data.to_dict(orient="records")
 
-    def _send_email(
-        self,
-        car_data: dict,
-        receiver_email: str,
-    ) -> None:
+    def _send_email(self, car_data: dict, receiver_email: str, ) -> None:
         """
         Sends an email containing the top 10 picks of cars to a specified recipient.
         The function uses the Simple Mail Transfer Protocol (SMTP) to send the email.

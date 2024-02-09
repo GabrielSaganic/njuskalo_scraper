@@ -2,7 +2,7 @@ name: Daily scrape Njuskalo's cars
 
 on:
   schedule:
-    - cron: '0 21 * * *'
+    - cron: '0 22 * * *'
 
 jobs:
   build:
@@ -24,19 +24,15 @@ jobs:
 
       - name: Run Daily Scraping Job
         env:
-          AUTHORIZATION_KEY: ${{ secrets.AUTHORIZATION_KEY }}
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SECRET_ACCESS_KEY: ${{ secrets.SECRET_ACCESS_KEY }}
+          ACCESS_KEY: ${{ secrets.ACCESS_KEY }}
+          BUCKET_NAME: ${{ secrets.BUCKET_NAME }}
         run: python source/njuskalo_scraper.py
 
       - name: Run Sending Email Job
         env:
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
           APP_PASSWORD: ${{ secrets.APP_PASSWORD }}
           SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
           SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}

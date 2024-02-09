@@ -1,4 +1,6 @@
 beautifulsoup4==4.12.2
+boto3==1.34.38
+botocore==1.34.38
 certifi==2023.11.17
 cffi==1.16.0
 charset-normalizer==3.3.2
@@ -7,6 +9,7 @@ cryptography==42.0.0
 greenlet==3.0.3
 html5lib==1.1
 idna==3.6
+jmespath==1.0.1
 joblib==1.3.2
 mypy-extensions==1.0.0
 mysql-connector-python==8.3.0
@@ -19,6 +22,7 @@ pycparser==2.21
 python-dateutil==2.8.2
 pytz==2023.3.post1
 requests==2.31.0
+s3transfer==0.10.0
 scikit-learn==1.3.2
 scipy==1.11.4
 six==1.16.0
@@ -29,5 +33,5 @@ threadpoolctl==3.2.0
 tomli==2.0.1
 typing_extensions==4.9.0
 tzdata==2023.4
-urllib3==2.1.0
+urllib3==2.0.7
 webencodings==0.5.1

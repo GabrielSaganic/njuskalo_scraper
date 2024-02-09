@@ -4,14 +4,16 @@ from bs4 import BeautifulSoup
 from sqlalchemy_database.car_brand import CarBrand
 from sqlalchemy_database.car_detail import CarDetail
 from utils import get_car_detail, get_car_link, make_request
+from s3_utilis import download_from_s3, upload_file_s3
+import os
 
 logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO
 )
 
-MIN_PRICE = 3000
+MIN_PRICE = 5000
 MAX_PRICE = 9000
-MAX_DISTANCE = 150000
+MAX_DISTANCE = 100000
 
 list_of_active_link = []
 
@@ -84,8 +86,14 @@ class ScraperClass:
 
 def main():
     logging.info(f"Starting scraper! Good luck!")
+
+    bucket_name = os.environ.get("BUCKET_NAME", "")
+    download_from_s3("cars_detail.db", bucket_name, "tmp_cars_detail.db")
+
     scraper_api = ScraperClass(MIN_PRICE, MAX_PRICE, MAX_DISTANCE)
     scraper_api.start_scraping()
+    
+    upload_file_s3("tmp_cars_detail.db", bucket_name, "cars_detail.db")
 
 
 if __name__ == "__main__":
