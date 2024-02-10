@@ -2,7 +2,7 @@ import os
 
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.dialects.mysql import LONGTEXT
-from sqlalchemy_database.common.base import Base, session_factory
+from sqlalchemy_database import Base, session_factory
 from sqlalchemy_utils import EncryptedType
 from sqlalchemy_utils.types.encrypted.encrypted_type import AesEngine
 

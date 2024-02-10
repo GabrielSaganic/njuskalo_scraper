@@ -1,6 +1,8 @@
 import logging
+import os
 
-from sqlalchemy_database.user import User
+from s3_utilis import download_from_s3, upload_file_s3
+from sqlalchemy_database import User
 from utils import mask_email
 
 logging.basicConfig(
@@ -62,8 +64,14 @@ search_config = {
 
 
 try:
+    bucket_name = os.environ.get("BUCKET_NAME", "")
+    download_from_s3("cars_detail.db", bucket_name, "tmp_cars_detail.db")
+
     email = "exampel.example@gmail.com"
     User.create_user(email, str(search_config))
     logging.info(f"Successfully added user: {mask_email(email)}")
+
+    upload_file_s3("tmp_cars_detail.db", bucket_name, "cars_detail.db")
+
 except Exception as e:
     logging.error(f"Error adding user: {mask_email(email)}. Detail: {e}")

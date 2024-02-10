@@ -1,11 +1,10 @@
 import logging
+import os
 
 from bs4 import BeautifulSoup
-from sqlalchemy_database.car_brand import CarBrand
-from sqlalchemy_database.car_detail import CarDetail
-from utils import get_car_detail, get_car_link, make_request
 from s3_utilis import download_from_s3, upload_file_s3
-import os
+from sqlalchemy_database import CarBrand, CarDetail
+from utils import get_car_detail, get_car_link, make_request
 
 logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -92,7 +91,7 @@ def main():
 
     scraper_api = ScraperClass(MIN_PRICE, MAX_PRICE, MAX_DISTANCE)
     scraper_api.start_scraping()
-    
+
     upload_file_s3("tmp_cars_detail.db", bucket_name, "cars_detail.db")
 
 

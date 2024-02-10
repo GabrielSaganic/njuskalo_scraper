@@ -7,10 +7,7 @@ from email.mime.text import MIMEText
 
 from pandas import read_sql
 from sqlalchemy import or_
-from sqlalchemy_database.car_brand import CarBrand
-from sqlalchemy_database.car_detail import CarDetail
-from sqlalchemy_database.common.base import session_factory
-from sqlalchemy_database.user import User
+from sqlalchemy_database import CarBrand, CarDetail, session_factory, User
 from utils import generate_email_html, generate_email_text, mask_email
 
 logging.basicConfig(
@@ -65,8 +62,11 @@ class SummarizeCars:
                 ),
                 CarDetail.kilometers < search_config.get("kilometers", 0),
                 CarDetail.active == True,
-                CarDetail.year_of_manufacture > search_config.get("year_of_manufacture", 0),
-                (CarBrand.name + " " + CarDetail.car_model).in_(search_config.get("car_model", []))
+                CarDetail.year_of_manufacture
+                > search_config.get("year_of_manufacture", 0),
+                (CarBrand.name + " " + CarDetail.car_model).in_(
+                    search_config.get("car_model", [])
+                ),
             )
             .order_by(CarDetail.price.asc())
             .limit(10)
@@ -75,7 +75,11 @@ class SummarizeCars:
         cars_data = read_sql(instance.statement, instance.session.bind)
         return cars_data.to_dict(orient="records")
 
-    def _send_email(self, car_data: dict, receiver_email: str, ) -> None:
+    def _send_email(
+        self,
+        car_data: dict,
+        receiver_email: str,
+    ) -> None:
         """
         Sends an email containing the top 10 picks of cars to a specified recipient.
         The function uses the Simple Mail Transfer Protocol (SMTP) to send the email.
@@ -93,9 +97,9 @@ class SummarizeCars:
 
         sender_email = "gabriel.saganic@gmail.com"
         message = MIMEMultipart("alternative")
-        message[
-            "Subject"
-        ] = "Your Daily Top 10 Picks: The Finest Cars on the Market Today!"
+        message["Subject"] = (
+            "Your Daily Top 10 Picks: The Finest Cars on the Market Today!"
+        )
         message["From"] = sender_email
         message["To"] = receiver_email
 

@@ -2,7 +2,7 @@
 
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import relationship
-from sqlalchemy_database.common.base import Base, session_factory
+from sqlalchemy_database import Base, session_factory
 
 
 class CarBrand(Base):

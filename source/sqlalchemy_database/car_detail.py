@@ -3,7 +3,7 @@
 from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from sqlalchemy_database.common.base import Base, session_factory
+from sqlalchemy_database import Base, session_factory
 
 
 class CarDetail(Base):
